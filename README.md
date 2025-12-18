@@ -22,7 +22,6 @@ new_pws/
 |--------|-----------|
 | `master` | Produção |
 | `stage` | Homologação/QA |
-| `develop` | Integração contínua |
 | `feature/*` | Desenvolvimento de tarefas |
 
 ## Setup Local
@@ -63,6 +62,7 @@ docker-compose up -d
 
 ## Documentação
 
+- [PRD - Product Requirements Document](PRD_ProtoWorks_System.md)
 - [Tasks Database](docs/TASKS_DATABASE.md)
 - [Tasks Backend](docs/TASKS_BACKEND.md)
 - [Tasks Frontend](docs/TASKS_FRONTEND.md)
