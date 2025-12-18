@@ -1,6 +1,6 @@
 # ProtoWorks System (PWS) - Workflow de Execução de Tarefas
 
-**Versão:** 1.0
+**Versão:** 1.1
 **Data:** 17 de Dezembro de 2025
 **Escopo:** Processo padronizado para execução, revisão, teste e deploy de tarefas
 
@@ -12,7 +12,7 @@ Este documento define o fluxo de trabalho obrigatório para execução de todas 
 
 ---
 
-## Estrutura de Branches (GitFlow)
+## Estrutura de Branches (Simplificada)
 
 ```
                                     ┌─────────────┐
@@ -20,11 +20,7 @@ Este documento define o fluxo de trabalho obrigatório para execução de todas 
                                     └──────┬──────┘
                                            │
                                     ┌──────▼──────┐
-                                    │   stage     │  ← Homologação/QA
-                                    └──────┬──────┘
-                                           │
-                                    ┌──────▼──────┐
-                                    │   develop   │  ← Integração contínua
+                                    │   stage     │  ← Integração + QA
                                     └──────┬──────┘
                                            │
               ┌────────────────────────────┼────────────────────────────┐
@@ -40,10 +36,9 @@ Este documento define o fluxo de trabalho obrigatório para execução de todas 
 | Branch | Propósito | Proteção |
 |--------|-----------|----------|
 | `master` | Código em produção, apenas releases | Protegida, requer PR aprovado de `stage` |
-| `stage` | Ambiente de homologação/QA | Protegida, requer PR aprovado de `develop` |
-| `develop` | Branch de integração | Protegida, requer PR aprovado de `feature/*` |
+| `stage` | Integração contínua + Homologação/QA | Protegida, requer PR aprovado de `feature/*` |
 | `feature/*` | Desenvolvimento de tarefas | Não protegida, criada por dev |
-| `hotfix/*` | Correções urgentes em produção | Merge direto em `master` e `develop` |
+| `hotfix/*` | Correções urgentes em produção | Merge direto em `master` e `stage` |
 | `release/*` | Preparação de release | Criada de `stage`, merge em `master` |
 
 ### Nomenclatura de Branches
@@ -77,7 +72,7 @@ Exemplos:
 │                         ETAPA 2: BRANCH & IMPLEMENTAÇÃO                     │
 │                         Responsável: Agente Especializado                   │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│  • Criar branch: git checkout -b feature/[ID]-[nome]                        │
+│  • Criar branch: git checkout -b feature/[ID]-[nome] (de stage)             │
 │  • Implementar código                                                       │
 │  • Commits atômicos com mensagens descritivas                               │
 │  • Push para origin                                                         │
@@ -88,7 +83,7 @@ Exemplos:
 │                         ETAPA 3: PULL REQUEST                               │
 │                         Responsável: Agente que implementou                 │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│  • Abrir PR: feature/[ID] → develop                                         │
+│  • Abrir PR: feature/[ID] → stage                                           │
 │  • Preencher template do PR                                                 │
 │  • Vincular à tarefa/issue                                                  │
 │  • Solicitar reviewers                                                      │
@@ -107,49 +102,39 @@ Exemplos:
                                      │
                                      ▼ (Aprovado)
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                         ETAPA 5: MERGE → DEVELOP                            │
+│                         ETAPA 5: MERGE → STAGE                              │
 │                         Responsável: Reviewer que aprovou                   │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│  • Squash and merge para develop                                            │
+│  • Squash and merge para stage                                              │
 │  • Deletar branch feature                                                   │
 │  • CI/CD executa testes automáticos                                         │
 └─────────────────────────────────────────────────────────────────────────────┘
                                      │
                                      ▼
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                         ETAPA 6: TESTES EM DEVELOP                          │
+│                         ETAPA 6: TESTES EM STAGE                            │
 │                         Responsável: testing-specialist                     │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│  • Testes unitários e integração executam automaticamente                   │
+│  • Testes unitários e integração executam automaticamente (CI)              │
 │  • testing-specialist valida cenários adicionais                            │
-│  • Se falhar: abrir nova branch para correção                               │
-└─────────────────────────────────────────────────────────────────────────────┘
-                                     │
-                                     ▼ (Sprint completa ou milestone)
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                         ETAPA 7: PR → STAGE                                 │
-│                         Responsável: Tech Lead / Claude                     │
-├─────────────────────────────────────────────────────────────────────────────┤
-│  • Abrir PR: develop → stage                                                │
-│  • Revisar changelog das features incluídas                                 │
-│  • Aprovar e fazer merge                                                    │
 │  • Deploy automático para ambiente de homologação                           │
+│  • Se falhar: abrir nova branch para correção                               │
 └─────────────────────────────────────────────────────────────────────────────┘
                                      │
                                      ▼
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                         ETAPA 8: QA EM STAGE                                │
+│                         ETAPA 7: QA + UAT EM STAGE                          │
 │                         Responsável: testing-specialist + Usuário           │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │  • Testes E2E completos                                                     │
 │  • Testes de regressão                                                      │
 │  • Validação com usuário (UAT)                                              │
-│  • Se bugs: fix em develop, novo PR para stage                              │
+│  • Se bugs: fix em nova feature branch, PR para stage                       │
 └─────────────────────────────────────────────────────────────────────────────┘
                                      │
                                      ▼ (Aprovado para produção)
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                         ETAPA 9: PR → MASTER (RELEASE)                      │
+│                         ETAPA 8: PR → MASTER (RELEASE)                      │
 │                         Responsável: Tech Lead / Usuário                    │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │  • Criar branch release/vX.Y.Z de stage                                     │
@@ -162,7 +147,7 @@ Exemplos:
                                      │
                                      ▼
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                         ETAPA 10: CONCLUSÃO                                 │
+│                         ETAPA 9: CONCLUSÃO                                  │
 │                         Responsável: Claude                                 │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │  • Atualizar status da tarefa (TodoWrite)                                   │
@@ -226,9 +211,9 @@ Exemplos:
 **Comandos Git:**
 
 ```bash
-# Atualizar develop
-git checkout develop
-git pull origin develop
+# Atualizar stage
+git checkout stage
+git pull origin stage
 
 # Criar feature branch
 git checkout -b feature/[ID]-[descricao-curta]
@@ -309,9 +294,9 @@ Exemplos:
 
 ```bash
 gh pr create \
-  --base develop \
+  --base stage \
   --title "[ID] Descrição curta" \
-  --body "$(cat .github/PULL_REQUEST_TEMPLATE.md)"
+  --body "Descrição do PR"
 ```
 
 ---
@@ -391,13 +376,13 @@ git push
 
 ---
 
-### ETAPA 5: Merge para Develop
+### ETAPA 5: Merge para Stage
 
-**Objetivo:** Integrar código aprovado na branch de desenvolvimento.
+**Objetivo:** Integrar código aprovado na branch de integração.
 
 **Quem faz o merge:** O reviewer que aprovou o PR.
 
-**Tipo de Merge:** Squash and Merge (commits limpos em develop)
+**Tipo de Merge:** Squash and Merge (commits limpos em stage)
 
 ```bash
 # Via GitHub UI ou CLI
@@ -411,6 +396,7 @@ gh pr merge [PR_NUMBER] --squash --delete-branch
    - Testes unitários
    - Build
    - Cobertura de código
+   - Deploy para ambiente de staging
 
 2. Se CI falhar:
    - Abrir nova branch de fix
@@ -418,7 +404,7 @@ gh pr merge [PR_NUMBER] --squash --delete-branch
 
 ---
 
-### ETAPA 6: Testes em Develop
+### ETAPA 6: Testes em Stage
 
 **Objetivo:** Validar integração com código existente.
 
@@ -431,9 +417,9 @@ gh pr merge [PR_NUMBER] --squash --delete-branch
 name: CI
 on:
   push:
-    branches: [develop]
+    branches: [stage]
   pull_request:
-    branches: [develop]
+    branches: [stage]
 
 jobs:
   test-backend:
@@ -460,7 +446,7 @@ jobs:
 **Testes Manuais pelo testing-specialist:**
 
 ```
-Execute testes de integração para as features merged em develop:
+Execute testes de integração para as features merged em stage:
 
 FEATURES INCLUÍDAS:
 - [ID-1] - [Nome]
@@ -479,33 +465,7 @@ Reporte:
 
 ---
 
-### ETAPA 7: PR para Stage
-
-**Objetivo:** Promover código estável para homologação.
-
-**Quando:** Final de sprint ou quando milestone estiver completa.
-
-**Processo:**
-
-```bash
-# Criar PR de develop para stage
-gh pr create \
-  --base stage \
-  --head develop \
-  --title "Release Sprint [N] para Stage" \
-  --body "## Features Incluídas
-  - [ID-1] Feature 1
-  - [ID-2] Feature 2
-
-  ## Changelog
-  [Lista de mudanças]"
-```
-
-**Aprovação:** Tech Lead ou Usuário responsável.
-
----
-
-### ETAPA 8: QA em Stage
+### ETAPA 7: QA + UAT em Stage
 
 **Objetivo:** Validação completa antes de produção.
 
@@ -547,13 +507,13 @@ gh pr create \
 **Se bugs encontrados:**
 
 1. Documentar bug
-2. Fix em branch `hotfix/[bug-id]` de develop
-3. PR para develop → merge
-4. Novo PR develop → stage
+2. Fix em nova branch `feature/fix-[bug-id]`
+3. PR para stage → review → merge
+4. Re-testar
 
 ---
 
-### ETAPA 9: Release para Master
+### ETAPA 8: Release para Master
 
 **Objetivo:** Deploy em produção.
 
@@ -591,13 +551,18 @@ git checkout master
 git pull
 git tag -a v1.0.0 -m "Release v1.0.0"
 git push origin v1.0.0
+
+# Sincronizar stage com master (garantir paridade)
+git checkout stage
+git merge master
+git push
 ```
 
 **Deploy:** Automático via CI/CD para produção.
 
 ---
 
-### ETAPA 10: Conclusão
+### ETAPA 9: Conclusão
 
 **Objetivo:** Finalizar ciclo e preparar próxima iteração.
 
@@ -640,7 +605,7 @@ Para bugs críticos em produção:
                             │
                             ▼
                      ┌──────────────┐
-                     │   develop    │  (cherry-pick ou merge)
+                     │    stage     │  (cherry-pick ou merge)
                      └──────────────┘
 ```
 
@@ -657,8 +622,8 @@ git commit -m "[HOTFIX] Fix critical bug"
 # PR para master (revisão rápida)
 gh pr create --base master --title "[HOTFIX] Fix critical bug"
 
-# Após merge em master, também aplicar em develop
-git checkout develop
+# Após merge em master, também aplicar em stage
+git checkout stage
 git pull
 git merge master  # ou cherry-pick específico
 git push
@@ -684,14 +649,9 @@ git push
 ```
 - Require pull request reviews: 1
 - Require status checks: CI passing
-- Require branches up to date: Yes
-```
-
-**develop:**
-```
-- Require pull request reviews: 1
-- Require status checks: CI passing
 - Dismiss stale reviews: Yes
+- Allow force pushes: No
+- Allow deletions: No
 ```
 
 ---
@@ -708,12 +668,7 @@ TAREFA APROVADA
          │ PR
          ▼
 ┌─────────────────┐
-│    develop      │  ← Reviewer aprova e merge
-└────────┬────────┘
-         │ Testes CI
-         ▼
-┌─────────────────┐
-│     stage       │  ← QA + UAT
+│     stage       │  ← Review + Merge + Testes + QA
 └────────┬────────┘
          │ Aprovado
          ▼
@@ -746,7 +701,7 @@ TAREFA APROVADA
 1. **Commits atômicos** - uma mudança lógica por commit
 2. **Mensagens descritivas** - prefixo com ID da tarefa
 3. **Branches curtas** - merge frequente, evitar branches longevas
-4. **Squash on merge** - manter histórico limpo em develop
+4. **Squash on merge** - manter histórico limpo em stage
 
 ---
 
@@ -758,7 +713,7 @@ TAREFA APROVADA
 ⚠️ CONFLITO DE MERGE DETECTADO
 
 Branch: feature/[ID]-[nome]
-Conflito com: develop
+Conflito com: stage
 
 Arquivos em conflito:
 - path/to/file1.py
@@ -770,15 +725,15 @@ Ação: Resolver conflitos localmente e push novo commit.
 ### CI Falha Após Merge
 
 ```
-❌ CI FALHOU EM DEVELOP
+❌ CI FALHOU EM STAGE
 
 Build: #[número]
 Motivo: [Descrição do erro]
 
 Ação imediata necessária:
-1. Abrir branch hotfix/fix-ci-[ID]
+1. Abrir branch feature/fix-ci-[ID]
 2. Corrigir problema
-3. PR urgente para develop
+3. PR urgente para stage
 ```
 
 ### Rollback Necessário
@@ -792,7 +747,7 @@ Ação:
 1. git revert [commit-hash]
 2. PR de emergência para master
 3. Investigar causa raiz
-4. Fix em develop com novo ciclo
+4. Fix em stage com novo ciclo
 ```
 
 ---
@@ -835,6 +790,7 @@ Ação:
 | Versão | Data | Autor | Mudanças |
 |--------|------|-------|----------|
 | 1.0 | 2025-12-17 | Claude | Versão inicial com GitFlow completo |
+| 1.1 | 2025-12-17 | Claude | Simplificado para 2 branches (stage + master) |
 
 ---
 
