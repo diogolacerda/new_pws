@@ -59,3 +59,9 @@ Thumbs.db
 .next/
 .nuxt/
 .turbo/
+
+# Claude Code - sensitive files
+.claude/homeserver.md
+.claude/**/secrets.md
+.claude/**/credentials.md
+.claude/**/infrastructure.md
